@@ -4,7 +4,8 @@ import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHel
 
 const LightsCount = 5;
 const LightInterval = 5; 
-const PictureSize = 1.5;
+const PictureSize = 1.2;
+const TextOffset = 0.2;
 const lights: THREE.Object3D [] = [];
 const CorridorParams = {
   width: 4,
@@ -56,8 +57,11 @@ for (let i=1; i <= LightsCount; i++) {
     areaLight.rotateX(-Math.PI/2)
     lights.push(areaLight);
 
-    addPictures(i, scene, 'left');
-    addPictures(i, scene, 'right');
+    addPicture(i, scene, 'left');
+    addPicture(i, scene, 'right');
+
+    addText('Meow meow', scene, i, 'left');
+    addText('Meow meow', scene, i, 'right');
 
 }
 
@@ -83,7 +87,7 @@ function createAreaLight(scene: THREE.Scene): THREE.RectAreaLight {
   return areaLight;
 }
 
-function addPictures(index: number, scene: THREE.Scene, side: 'left' | 'right' = 'left') {
+function addPicture(index: number, scene: THREE.Scene, side: 'left' | 'right' = 'left') {
   const map = new THREE.TextureLoader().load('https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg');
   const material = new THREE.MeshStandardMaterial({ map: map, } );
   const geometry = new THREE.PlaneGeometry(PictureSize, PictureSize);
@@ -94,6 +98,30 @@ function addPictures(index: number, scene: THREE.Scene, side: 'left' | 'right' =
   plane.rotateY(sideCoef*-Math.PI/2)
 
   scene.add( plane );
+}
+
+function addText(text: string, scene: THREE.Scene, index: number, side: 'left' | 'right') {
+  const canvas = document.createElement('canvas');
+  const textureSize = 1024;
+  canvas.width = textureSize;
+  canvas.height = textureSize/4;
+  const context = canvas.getContext('2d')!;
+  
+  context.font = "48px serif";
+  context.fillStyle = new THREE.Color('White').getStyle();
+  context.fillText(text, 0, 50);
+
+  const map = new THREE.CanvasTexture(canvas);
+  const material = new THREE.MeshBasicMaterial({ map: map, transparent: true } );
+  const geometry = new THREE.PlaneGeometry(PictureSize, PictureSize/4);
+  const plane = new THREE.Mesh(geometry, material);
+
+  const sideCoef = (side === 'left') ? -1 : 1;
+  plane.position.set(sideCoef*(CorridorParams.width/2 - 0.1), -(PictureSize/2 + TextOffset), index*LightInterval + corridorBB.min.z);
+  plane.rotateY(sideCoef*-Math.PI/2)
+
+  scene.add(plane);
+  return plane;
 }
 
 // Cat picture https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg
