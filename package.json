@@ -9,7 +9,6 @@
         "prettier": "prettier --config .prettierrc --write .",
         "lint": "eslint . --ext .ts --ext .mts"
     },
-    "type": "module",
     "keywords": [
         "TypeScript",
         "Browser"

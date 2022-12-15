@@ -1,6 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
 
-import { config } from '../../config.js';
+import { config } from '../../config';
 
 interface ImageGenerationResponse {
     text: string;
@@ -41,14 +41,14 @@ export class OpenApi {
         for (let i = 0; i < textResponse.data.choices.length; ++i) {
             const text =
                 textResponse.data.choices[i].text?.replace('\n', '') ?? '';
-            const imageResponse = await this.openai.createImage({
-                prompt: text,
-            });
+            // const imageResponse = await this.openai.createImage({
+            //     prompt: text,
+            // });
 
             result.push({
                 text,
-                imageUrl: imageResponse.data.data[0].url,
-                b64_json: imageResponse.data.data[0].b64_json,
+                // imageUrl: imageResponse.data.data[0].url,
+                // b64_json: imageResponse.data.data[0].b64_json,
             });
         }
 
