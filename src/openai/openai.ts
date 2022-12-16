@@ -17,41 +17,81 @@ export class OpenApi {
         }
 
         const configuration = new Configuration({
+            organization: 'org-OBa3B621reUXWiVYyxWuPhNp',
             apiKey,
         });
         this.openai = new OpenAIApi(configuration);
+        this.openai.listModels().then((ar) => console.log(ar.data));
     }
 
-    async getImagesFromText(
+    
+    async getImagesFromTopic(
         initialPrompt: string,
-        n = 10,
+        n = 1,
     ): Promise<ImageGenerationResponse[]> {
-        const textResponse = await this.openai.createCompletion({
-            model: 'text-davinci-001',
-            prompt: initialPrompt,
-            temperature: 0.4,
-            max_tokens: Math.floor(2048 / n),
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-            n: n,
-        });
+        const { openai } = this;
+        let phrases: string [] = []
+        const textResponse = await textRequest(initialPrompt);
+        // await openai.createCompletion({
+        //     model: 'text-curie-001',
+        //     prompt: initialPrompt,
+        // });
+        console.log(textResponse);
+        phrases = textResponse.choices[0].text.split('\n')
+        // phrases = phrases.filter(s => s.length !== 0).map((s) => {
+        //     return s.slice(5)
+        // });
+        console.log(phrases);
 
         const result: ImageGenerationResponse[] = [];
-        for (let i = 0; i < textResponse.data.choices.length; ++i) {
+        for (let i = 0; i < phrases.length; ++i) {
             const text =
-                textResponse.data.choices[i].text?.replace('\n', '') ?? '';
-            // const imageResponse = await this.openai.createImage({
-            //     prompt: text,
-            // });
+                phrases[0] ?? '';
+            const imageResponse = await this.openai.createImage({
+                prompt: text,
+            });
 
             result.push({
                 text,
-                // imageUrl: imageResponse.data.data[0].url,
+                imageUrl: imageResponse.data.data[0].url,
                 // b64_json: imageResponse.data.data[0].b64_json,
             });
         }
 
         return result;
     }
+}
+
+function textRequest(prompt: string) {
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + String(config.openAiApi)
+        },
+        body: JSON.stringify({
+          'prompt': prompt,
+          'max_tokens': 1000,
+          'stop': ["\"\"\""],
+        })
+      };
+      return fetch('https://api.openai.com/v1/engines/text-curie-001/completions', requestOptions)
+          .then(response => response.json())
+}
+
+function imageRequest(prompt: string) {
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + String(config.openAiApi)
+        },
+        body: JSON.stringify({
+          'prompt': prompt,
+          'max_tokens': 1000,
+          'stop': ["\"\"\""],
+        })
+      };
+      return fetch('https://api.openai.com/v1/engines/text-curie-001/completions', requestOptions)
+          .then(response => response.json())
 }

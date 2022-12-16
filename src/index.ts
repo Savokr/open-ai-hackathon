@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper';
+import { OpenApi } from './openai/openai';
 
-const LightsCount = 5;
+const LightsCount = 6;
 const LightInterval = 5;
+const MovementSpeed = 0.03;
 const PictureSize = 1.2;
 const TextOffset = 0.2;
 const lights: THREE.Object3D[] = [];
@@ -21,6 +23,12 @@ canvasWrapper.appendChild(domElement);
 styleFullScreen(canvasWrapper);
 styleFullScreen(domElement);
 
+// dom stuff
+const blocker = document.getElementById('blocker')!;
+const instructions = document.getElementById('instructions')!;
+const inputField = document.getElementById('input-field')!;
+inputField.addEventListener('click', (e) => e.stopPropagation());
+
 // Renderer settings
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -35,12 +43,32 @@ camera.position.set(0, 0, 3);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('black');
 
-const controls = new PointerLockControls(camera, domElement);
+// FPS controls
+const controls = new PointerLockControls(camera, document.body);
+controls.addEventListener('lock', function () {
+
+  instructions.style.display = 'none';
+  blocker.style.display = 'none';
+
+});
+
+controls.addEventListener('unlock', function () {
+
+  blocker.style.display = 'block';
+  instructions.style.display = '';
+
+});
+instructions.addEventListener('click', function () {
+
+  controls.lock();
+
+});
 
 let isMovingForward = false;
 let isMovingLeft = false;
 let isMovingRight = false;
 let isMovingBack = false;
+
 const onKeyDown = function (event: KeyboardEvent): void {
     switch (event.code) {
         case 'KeyW':
@@ -73,6 +101,21 @@ const onKeyUp = function (event: KeyboardEvent): void {
             break;
     }
 };
+const moveWithKeyboard = () => {
+  if (isMovingForward) {
+    controls.moveForward(MovementSpeed);
+  }
+  if (isMovingLeft) {
+    controls.moveRight(-MovementSpeed);
+  }
+  if (isMovingRight) {
+    controls.moveRight(MovementSpeed);
+  }
+  if (isMovingBack) {
+    controls.moveForward(-MovementSpeed);
+  }
+}
+
 document.addEventListener('keydown', onKeyDown, false);
 document.addEventListener('keyup', onKeyUp, false);
 
@@ -96,6 +139,12 @@ const corridorBB = new THREE.Box3().setFromObject(corridor);
 const ambientLight = new THREE.AmbientLight(undefined, 0.3);
 scene.add(ambientLight);
 
+// Content generation
+
+const api = new OpenApi();
+const images = api.getImagesFromTopic('Generate 12 phrases describing surroundings with ');
+console.log(images);
+
 for (let i = 1; i <= LightsCount; i++) {
     const areaLight = createAreaLight(scene);
     const areaLighHelper = new RectAreaLightHelper(areaLight);
@@ -111,25 +160,14 @@ for (let i = 1; i <= LightsCount; i++) {
     addPicture(i, scene, 'left');
     addPicture(i, scene, 'right');
 
-    addText('Meow meow', scene, i, 'left');
-    addText('Meow meow', scene, i, 'right');
+    addTextObject('Meow meow', scene, i, 'left');
+    addTextObject('Meow meow', scene, i, 'right');
 }
 
 const render = (): void => {
-    if (isMovingForward) {
-        controls.moveForward(0.25);
-    }
-    if (isMovingLeft) {
-        controls.moveRight(-0.25);
-    }
-    if (isMovingRight) {
-        controls.moveRight(0.25);
-    }
-    if (isMovingBack) {
-        controls.moveForward(-0.25);
-    }
+    moveWithKeyboard();
+
     renderer.render(scene, camera);
-    //lights.forEach(li => li.rotateY(0.03));
     requestAnimationFrame(render);
 };
 
@@ -153,7 +191,7 @@ function addPicture(
     index: number,
     scene: THREE.Scene,
     side: 'left' | 'right' = 'left',
-): void {
+): THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial> {
     const map = new THREE.TextureLoader().load(
         'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg',
     );
@@ -170,9 +208,10 @@ function addPicture(
     plane.rotateY((sideCoef * -Math.PI) / 2);
 
     scene.add(plane);
+    return plane;
 }
 
-function addText(
+function addTextObject(
     text: string,
     scene: THREE.Scene,
     index: number,

@@ -4,7 +4,55 @@
         <meta charset="utf-8" />
         <title>Infinite gallery</title>
     </head>
+    <style>
+      #input-field {
+        height: 80px;
+        width: 300px;
+        font-size: 70px;
+        color: rgba(182, 182, 182, 0.861);
+        background: rgb(254 255 239);
+        border-radius: 5px;
+        border: 0px;
+      }
+      #blocker {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        left: 0px;
+        top: 0px;
+        font-family: 'Courier New', Courier, monospace;
+			}
+      #instructions {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+				text-align: center;
+        color: rgb(255, 255, 255);
+				cursor: pointer;
+        font-size: larger;
+			}
+    </style>
     <body>
         <div id="canvas-wrapper"></div>
+        <div id="blocker">
+          <div id="instructions">
+            <p style="font-size:36px">
+              Welcome to Infinite Gallery!
+            </p>
+            What kind of things you want to see?<br/><br/>
+            <input id="input-field" value="trees">
+            <p>
+              Move: WASD<br/>
+              Look: MOUSE
+            </p>
+          </div>
+        </div>
     </body>
 </html>
