@@ -44,7 +44,7 @@ scene.add(corridor);
 
 const corridorBB = new THREE.Box3().setFromObject(corridor);
 
-// Lights
+// Lights and scene objects
 
 const ambientLight = new THREE.AmbientLight(undefined, 0.3);
 scene.add(ambientLight);
@@ -53,7 +53,7 @@ for (let i=1; i <= LightsCount; i++) {
     const areaLight = createAreaLight(scene);
     const areaLighHelper = new RectAreaLightHelper(areaLight);
     scene.add(areaLighHelper);
-    areaLight.position.set(0,CorridorParams.height/2 - 0.01,i*LightInterval + corridorBB.min.z);
+    areaLight.position.set(0, CorridorParams.height/2 - 0.01, i*LightInterval + corridorBB.min.z);
     areaLight.rotateX(-Math.PI/2)
     lights.push(areaLight);
 
