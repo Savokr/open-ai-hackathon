@@ -13,7 +13,6 @@
         "TypeScript",
         "Browser"
     ],
-    "author": "Ryo Ota <nwtgck@nwtgck.org> (https://github.com/nwtgck)",
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^18.11.15",
