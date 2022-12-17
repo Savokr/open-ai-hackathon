@@ -1,10 +1,10 @@
 {
     "name": "infinite-gallery",
     "version": "0.1.0",
-    "description": "Starter for TypeScript on Web Browser",
+    "description": "Project Infinite Gallery.",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "serve": "webpack-cli serve --mode development --https",
+        "serve": "webpack-cli serve --mode development",
         "build": "webpack --mode production",
         "prettier": "prettier --config .prettierrc --write .",
         "lint": "eslint . --ext .ts --ext .mts"

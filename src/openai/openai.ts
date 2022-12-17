@@ -2,6 +2,9 @@ import { Configuration, OpenAIApi, ImagesResponseDataInner, ImagesResponse } fro
 
 import { image1 } from './testImages';
 
+//@ts-ignore
+import { config } from 'config';
+
 interface ImageGenerationResponse {
     text: string;
     imageData: Promise<ImagesResponseDataInner>
@@ -18,11 +21,7 @@ export class OpenApi {
 
     constructor(apiKey?: string) {
         if (!apiKey) {
-            try {
-                import('../../config').then((importConfig: ConfigType) => {
-                    this.apiKey = importConfig.config.openAiApi;
-                });
-            } catch (e) {}
+            this.apiKey = config?.openAiApi ?? '';
         }
     }
 
