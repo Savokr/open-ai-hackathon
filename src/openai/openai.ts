@@ -1,11 +1,12 @@
-import { Configuration, OpenAIApi } from 'openai';
+import { Configuration, OpenAIApi, ImagesResponseDataInner, ImagesResponse} from 'openai';
 
 import { config } from '../../config';
 
+import { image1 } from './testImages';
+
 interface ImageGenerationResponse {
     text: string;
-    imageUrl?: string;
-    b64_json?: string;
+    imageData: Promise<ImagesResponseDataInner>
 }
 
 export class OpenApi {
@@ -29,32 +30,31 @@ export class OpenApi {
         initialPrompt: string,
         n = 1,
     ): Promise<ImageGenerationResponse[]> {
-        const { openai } = this;
-        let phrases: string [] = []
-        const textResponse = await textRequest(initialPrompt);
+        const textResponse = await textRequest(initialPrompt, n);
         // await openai.createCompletion({
         //     model: 'text-curie-001',
-        //     prompt: initialPrompt,
+        //     prompt: initialPrompt
         // });
         console.log(textResponse);
-        phrases = textResponse.choices[0].text.split('\n')
-        // phrases = phrases.filter(s => s.length !== 0).map((s) => {
-        //     return s.slice(5)
-        // });
+        const phrases = textResponse.choices.map((ch : { text: string }) => 
+            ch.text.replace(/(\n)/g, ''));
         console.log(phrases);
 
         const result: ImageGenerationResponse[] = [];
         for (let i = 0; i < phrases.length; ++i) {
-            const text =
-                phrases[0] ?? '';
-            const imageResponse = await this.openai.createImage({
-                prompt: text,
-            });
-
+            const imagePrompt = phrases[i];
+            const imageResponse = imageRequest(imagePrompt + ' oil painting');
+                // this.openai.createImage({
+                //     prompt: imagePrompt,
+                //     size: '512x512',
+                //     n: 1
+                // });
             result.push({
-                text,
-                imageUrl: imageResponse.data.data[0].url,
-                // b64_json: imageResponse.data.data[0].b64_json,
+                text: imagePrompt,
+                imageData: imageResponse.then((resp: ImagesResponse) => {
+                    console.log(resp);
+                    return resp.data[0];
+                })
             });
         }
 
@@ -62,7 +62,7 @@ export class OpenApi {
     }
 }
 
-function textRequest(prompt: string) {
+async function textRequest(prompt: string, variantsNumber: number = 1) {
     const requestOptions = {
         method: 'POST',
         headers: {
@@ -71,7 +71,8 @@ function textRequest(prompt: string) {
         },
         body: JSON.stringify({
           'prompt': prompt,
-          'max_tokens': 1000,
+          'max_tokens': 100,
+          'n': variantsNumber,
           'stop': ["\"\"\""],
         })
       };
@@ -79,7 +80,7 @@ function textRequest(prompt: string) {
           .then(response => response.json())
 }
 
-function imageRequest(prompt: string) {
+async function imageRequest(prompt: string) {
     const requestOptions = {
         method: 'POST',
         headers: {
@@ -88,10 +89,34 @@ function imageRequest(prompt: string) {
         },
         body: JSON.stringify({
           'prompt': prompt,
-          'max_tokens': 1000,
-          'stop': ["\"\"\""],
+          'size': '512x512',
+          'n': 1,
+          'response_format': 'b64_json'
         })
       };
-      return fetch('https://api.openai.com/v1/engines/text-curie-001/completions', requestOptions)
+      return fetch('https://api.openai.com/v1/images/generations', requestOptions)
           .then(response => response.json())
 }
+
+async function mockImageRequest(promt: string = 'cat') {
+    const result: ImagesResponse = {
+        data: [{
+            b64_json: image1,
+            //url: 'https://oaidalleapiprodscus.blob.core.windows.net/private/org-OBa3B621reUXWiVYyxWuPhNp/user-6APxhygrRT706ltkzrks38Ft/img-BFgXZcUV3Bog63k7QoLp8nX1.png?st=2022-12-17T14%3A33%3A13Z&se=2022-12-17T16%3A33%3A13Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2022-12-17T15%3A33%3A13Z&ske=2022-12-18T15%3A33%3A13Z&sks=b&skv=2021-08-06&sig=n9eZdGQyCH6cEP3uzzym0jTsV5azwBtFBiucWCKDW7o%3D'
+        }],
+        created: -1
+    };
+
+    await asyncTimeout(Math.random()*1000);
+
+    return result;
+}
+
+async function asyncTimeout(time: number) {
+    return new Promise(function(resolve, reject) {
+        setTimeout(resolve, time);
+    });
+}
+
+
+// Cat picture https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg

@@ -3,6 +3,11 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper';
 import { OpenApi } from './openai/openai';
 
+type TextData = {
+  canvas: HTMLCanvasElement,
+  object: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
+}
+
 const LightsCount = 6;
 const LightInterval = 5;
 const MovementSpeed = 0.03;
@@ -14,6 +19,14 @@ const CorridorParams = {
     height: 2,
     length: 40,
 };
+const pictures: { 
+  text: TextData,
+  imgObject: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
+} [] = []
+
+let isNewGenerationRequired = true;
+// OpenAI API
+const api = new OpenApi();
 
 // Create renderer
 const canvasWrapper = document.getElementById('canvas-wrapper')!;
@@ -23,10 +36,13 @@ canvasWrapper.appendChild(domElement);
 styleFullScreen(canvasWrapper);
 styleFullScreen(domElement);
 
+// Textures
+const textureLoader = new THREE.TextureLoader();
+
 // dom stuff
 const blocker = document.getElementById('blocker')!;
 const instructions = document.getElementById('instructions')!;
-const inputField = document.getElementById('input-field')!;
+const inputField = document.getElementById('input-field')! as HTMLInputElement;
 inputField.addEventListener('click', (e) => e.stopPropagation());
 
 // Renderer settings
@@ -39,30 +55,12 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     10000,
 );
-camera.position.set(0, 0, 3);
+//camera.position.set(0, 0, 3);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('black');
 
 // FPS controls
 const controls = new PointerLockControls(camera, document.body);
-controls.addEventListener('lock', function () {
-
-  instructions.style.display = 'none';
-  blocker.style.display = 'none';
-
-});
-
-controls.addEventListener('unlock', function () {
-
-  blocker.style.display = 'block';
-  instructions.style.display = '';
-
-});
-instructions.addEventListener('click', function () {
-
-  controls.lock();
-
-});
 
 let isMovingForward = false;
 let isMovingLeft = false;
@@ -141,9 +139,7 @@ scene.add(ambientLight);
 
 // Content generation
 
-const api = new OpenApi();
-const images = api.getImagesFromTopic('Generate 12 phrases describing surroundings with ');
-console.log(images);
+
 
 for (let i = 1; i <= LightsCount; i++) {
     const areaLight = createAreaLight(scene);
@@ -157,15 +153,84 @@ for (let i = 1; i <= LightsCount; i++) {
     areaLight.rotateX(-Math.PI / 2);
     lights.push(areaLight);
 
-    addPicture(i, scene, 'left');
-    addPicture(i, scene, 'right');
+    const picture1 = addPicture(i, scene, 'left');
+    const picture2 = addPicture(i, scene, 'right');
 
-    addTextObject('Meow meow', scene, i, 'left');
-    addTextObject('Meow meow', scene, i, 'right');
+    const text1 = addTextObject('Meow meow', scene, i, 'left');
+    const text2 = addTextObject('Meow meow', scene, i, 'right');
+
+    pictures.push({
+      text: text1,
+      imgObject: picture1
+    })
+    pictures.push({
+      text: text2,
+      imgObject: picture2
+    })
 }
 
+// Scope required functions 
+const updatePicturesWithTopic = async (topic: string) => {
+  const images = await api.getImagesFromTopic(`Generate a phrase describing surroundings with ${inputField.value}`, pictures.length);
+
+  for (let i = 0; i< images.length; i++) {
+    const imgData = images[i];
+    const picture = pictures[i];
+    const canvas = picture.text.canvas;
+    const context = canvas.getContext('2d')!;
+
+    imgData.imageData.then((img) => {
+      const imgString = (img?.b64_json ? ('data:image/png;base64,' + img.b64_json) : img?.url) ?? '';
+      const map = textureLoader.load(imgString);
+      picture.imgObject.material.map = map;
+      picture.imgObject.material.needsUpdate = true;
+
+      const canvasText1 = imgData.text.slice(0, 50);
+      const canvasText2 = imgData.text.slice(50);
+
+      context.fillText(canvasText1, 0, 50);
+      context.fillText(canvasText2, 0, 100);
+
+      const textureMap = new THREE.CanvasTexture(canvas);
+      picture.text.object.material.map = textureMap;
+      picture.text.object.material.needsUpdate = true;
+
+      console.log('Canvas updated', canvasText1);
+    })
+  }
+  console.log(images);
+}
+
+controls.addEventListener('lock', function () {
+
+  instructions.style.display = 'none';
+  blocker.style.display = 'none';
+
+});
+
+controls.addEventListener('unlock', function () {
+
+  blocker.style.display = 'block';
+  instructions.style.display = 'flex';
+
+});
+instructions.addEventListener('click',function () {
+
+  controls.lock();
+
+  inputField.readOnly = true;
+
+  if (isNewGenerationRequired) {
+    updatePicturesWithTopic(inputField.value);
+    isNewGenerationRequired = false;
+  }
+  
+});
+
 const render = (): void => {
-    moveWithKeyboard();
+    if (controls.isLocked) {
+      moveWithKeyboard();
+    }
 
     renderer.render(scene, camera);
     requestAnimationFrame(render);
@@ -192,10 +257,10 @@ function addPicture(
     scene: THREE.Scene,
     side: 'left' | 'right' = 'left',
 ): THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial> {
-    const map = new THREE.TextureLoader().load(
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg',
-    );
-    const material = new THREE.MeshStandardMaterial({ map: map });
+    // const map = new THREE.TextureLoader().load(
+    //     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg',
+    // );
+    const material = new THREE.MeshStandardMaterial();
     const geometry = new THREE.PlaneGeometry(PictureSize, PictureSize);
     const plane = new THREE.Mesh(geometry, material);
     plane.castShadow = true;
@@ -216,7 +281,7 @@ function addTextObject(
     scene: THREE.Scene,
     index: number,
     side: 'left' | 'right',
-): THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> {
+): TextData {
     const canvas = document.createElement('canvas');
     const textureSize = 1024;
     canvas.width = textureSize;
@@ -225,7 +290,7 @@ function addTextObject(
 
     context.font = '48px serif';
     context.fillStyle = new THREE.Color('White').getStyle();
-    context.fillText(text, 0, 50);
+    //context.fillText(text, 0, 50);
 
     const map = new THREE.CanvasTexture(canvas);
     const material = new THREE.MeshBasicMaterial({
@@ -244,7 +309,5 @@ function addTextObject(
     plane.rotateY((sideCoef * -Math.PI) / 2);
 
     scene.add(plane);
-    return plane;
+    return {canvas, object: plane};
 }
-
-// Cat picture https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg
