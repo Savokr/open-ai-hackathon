@@ -26,6 +26,8 @@ const pictures: {
 } [] = []
 
 let isNewGenerationRequired = true;
+let isCustomApiKeyProvided = false;
+
 // OpenAI API
 const api = new OpenApi();
 
@@ -43,8 +45,9 @@ const textureLoader = new THREE.TextureLoader();
 // dom stuff
 const blocker = document.getElementById('blocker')!;
 const instructions = document.getElementById('instructions')!;
-const inputField = document.getElementById('input-field')! as HTMLInputElement;
-inputField.addEventListener('click', (e) => e.stopPropagation());
+const inputFieldApi = document.getElementById('api-input')! as HTMLInputElement;
+const inputFieldTopic = document.getElementById('input-field')! as HTMLInputElement;
+inputFieldTopic.addEventListener('click', (e) => e.stopPropagation());
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -173,7 +176,7 @@ for (let i = 1; i <= LightsCount; i++) {
 
 // Scope required functions 
 const updatePicturesWithTopic = async (topic: string) => {
-  const images = await api.getImagesFromTopic(`Generate a phrase describing surroundings with ${inputField.value}`, pictures.length);
+  const images = await api.getImagesFromTopic(`Generate a phrase describing surroundings with ${inputFieldTopic.value}`, pictures.length);
 
   for (let i = 0; i< images.length; i++) {
     const imgData = images[i];
@@ -199,11 +202,8 @@ const updatePicturesWithTopic = async (topic: string) => {
       const textureMap = new THREE.CanvasTexture(canvas);
       picture.text.object.material.map = textureMap;
       picture.text.object.material.needsUpdate = true;
-
-      console.log('Canvas updated', canvasText1);
     })
   }
-  console.log(images);
 }
 
 controls.addEventListener('lock', function () {
@@ -221,12 +221,17 @@ controls.addEventListener('unlock', function () {
 });
 instructions.addEventListener('click',function () {
 
+  if (!isCustomApiKeyProvided && !(inputFieldApi.value === '' || inputFieldApi.value === 'your key')) {
+    api.setApiKey(inputFieldApi.value);
+    isCustomApiKeyProvided = true;
+  }
+
   controls.lock();
 
-  inputField.readOnly = true;
+  inputFieldTopic.readOnly = true;
 
   if (isNewGenerationRequired) {
-    updatePicturesWithTopic(inputField.value);
+    updatePicturesWithTopic(inputFieldTopic.value);
     isNewGenerationRequired = false;
   }
   

@@ -38,6 +38,21 @@
 				cursor: pointer;
         font-size: larger;
 			}
+      #api-key {
+        text-align: center;
+        color: rgb(255, 255, 255);
+        position: absolute;
+        bottom: 3%;
+        left: 3%;
+        font-family: 'Courier New', Courier, monospace;
+      }
+      #api-input {
+        width: 200px;
+        color: rgba(182, 182, 182, 0.861);
+        background: rgb(254 255 239);
+        border-radius: 2px;
+        border: 0px;
+      }
     </style>
     <body>
         <div id="canvas-wrapper"></div>
@@ -52,8 +67,12 @@
                 <h2>Navigation</h2>
                 Move: WASD keys<br/>
                 Look around: mouse
-          
           </div>
+        <div id="api-key">
+          Enter your API key to test the app:
+          <input id="api-input" value="your key" onfocus="this.value=''">
+          (source code available <a href="https://github.com/Savokr/open-ai-hackathon">here</a>)
         </div>
+      </div>
     </body>
 </html>
