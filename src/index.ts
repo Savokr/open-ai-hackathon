@@ -10,14 +10,15 @@ type TextData = {
 
 const LightsCount = 6;
 const LightInterval = 5;
-const MovementSpeed = 0.03;
+const MovementSpeed = 0.035;
 const PictureSize = 1.2;
 const TextOffset = 0.2;
+const TextNewLineLength = 35;
 const lights: THREE.Object3D[] = [];
 const CorridorParams = {
     width: 4,
     height: 2,
-    length: 40,
+    length: 35,
 };
 const pictures: { 
   text: TextData,
@@ -44,6 +45,11 @@ const blocker = document.getElementById('blocker')!;
 const instructions = document.getElementById('instructions')!;
 const inputField = document.getElementById('input-field')! as HTMLInputElement;
 inputField.addEventListener('click', (e) => e.stopPropagation());
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize( window.innerWidth, window.innerHeight );
+})
 
 // Renderer settings
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -137,10 +143,6 @@ const corridorBB = new THREE.Box3().setFromObject(corridor);
 const ambientLight = new THREE.AmbientLight(undefined, 0.3);
 scene.add(ambientLight);
 
-// Content generation
-
-
-
 for (let i = 1; i <= LightsCount; i++) {
     const areaLight = createAreaLight(scene);
     const areaLighHelper = new RectAreaLightHelper(areaLight);
@@ -156,8 +158,8 @@ for (let i = 1; i <= LightsCount; i++) {
     const picture1 = addPicture(i, scene, 'left');
     const picture2 = addPicture(i, scene, 'right');
 
-    const text1 = addTextObject('Meow meow', scene, i, 'left');
-    const text2 = addTextObject('Meow meow', scene, i, 'right');
+    const text1 = addTextObject('Loading...', scene, i, 'left');
+    const text2 = addTextObject('Loading...', scene, i, 'right');
 
     pictures.push({
       text: text1,
@@ -185,11 +187,14 @@ const updatePicturesWithTopic = async (topic: string) => {
       picture.imgObject.material.map = map;
       picture.imgObject.material.needsUpdate = true;
 
-      const canvasText1 = imgData.text.slice(0, 50);
-      const canvasText2 = imgData.text.slice(50);
+      const canvasText1 = imgData.text.slice(0, TextNewLineLength);
+      const canvasText2 = imgData.text.slice(TextNewLineLength, TextNewLineLength*2);
+      const canvasText3 = imgData.text.slice(TextNewLineLength*2);
 
+      context.clearRect(0, 0, canvas.width, canvas.height);
       context.fillText(canvasText1, 0, 50);
       context.fillText(canvasText2, 0, 100);
+      context.fillText(canvasText3, 0, 150);
 
       const textureMap = new THREE.CanvasTexture(canvas);
       picture.text.object.material.map = textureMap;
@@ -288,9 +293,9 @@ function addTextObject(
     canvas.height = textureSize / 4;
     const context = canvas.getContext('2d')!;
 
-    context.font = '48px serif';
+    context.font = '48px Courier New';
     context.fillStyle = new THREE.Color('White').getStyle();
-    //context.fillText(text, 0, 50);
+    context.fillText(text, 0, 50);
 
     const map = new THREE.CanvasTexture(canvas);
     const material = new THREE.MeshBasicMaterial({

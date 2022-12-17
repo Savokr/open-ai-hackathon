@@ -18,11 +18,9 @@ export class OpenApi {
         }
 
         const configuration = new Configuration({
-            organization: 'org-OBa3B621reUXWiVYyxWuPhNp',
             apiKey,
         });
         this.openai = new OpenAIApi(configuration);
-        this.openai.listModels().then((ar) => console.log(ar.data));
     }
 
     
@@ -31,28 +29,18 @@ export class OpenApi {
         n = 1,
     ): Promise<ImageGenerationResponse[]> {
         const textResponse = await textRequest(initialPrompt, n);
-        // await openai.createCompletion({
-        //     model: 'text-curie-001',
-        //     prompt: initialPrompt
-        // });
-        console.log(textResponse);
+        
         const phrases = textResponse.choices.map((ch : { text: string }) => 
-            ch.text.replace(/(\n)/g, ''));
-        console.log(phrases);
+            ch.text.replace(/(\n)/g, '').replace(/\./g, ''));
 
         const result: ImageGenerationResponse[] = [];
         for (let i = 0; i < phrases.length; ++i) {
             const imagePrompt = phrases[i];
-            const imageResponse = imageRequest(imagePrompt + ' oil painting');
-                // this.openai.createImage({
-                //     prompt: imagePrompt,
-                //     size: '512x512',
-                //     n: 1
-                // });
+            const imageResponse = mockImageRequest();//imageRequest(imagePrompt + ' oil painting');
+               
             result.push({
                 text: imagePrompt,
                 imageData: imageResponse.then((resp: ImagesResponse) => {
-                    console.log(resp);
                     return resp.data[0];
                 })
             });
