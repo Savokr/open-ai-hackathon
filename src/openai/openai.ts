@@ -76,7 +76,7 @@ async function textRequest(prompt: string, variantsNumber: number = 1) {
           'stop': ["\"\"\""],
         })
       };
-      return fetch('https://api.openai.com/v1/engines/text-curie-001/completions', requestOptions)
+      return fetch('https://api.openai.com/v1/engines/text-davinci-003/completions', requestOptions)
           .then(response => response.json())
 }
 
