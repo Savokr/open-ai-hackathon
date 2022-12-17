@@ -5,7 +5,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "serve": "webpack-cli serve --mode development --https",
-        "build": "webpack",
+        "build": "webpack --mode production",
         "prettier": "prettier --config .prettierrc --write .",
         "lint": "eslint . --ext .ts --ext .mts"
     },

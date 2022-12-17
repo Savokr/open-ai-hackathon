@@ -1,7 +1,5 @@
 import { Configuration, OpenAIApi, ImagesResponseDataInner, ImagesResponse } from 'openai';
 
-import { config } from '../../config';
-
 import { image1 } from './testImages';
 
 interface ImageGenerationResponse {
@@ -9,12 +7,22 @@ interface ImageGenerationResponse {
     imageData: Promise<ImagesResponseDataInner>
 }
 
+type ConfigType = {
+    config: {
+        openAiApi: string
+    }
+}
+
 export class OpenApi {
     private apiKey: string = '';
 
     constructor(apiKey?: string) {
         if (!apiKey) {
-            this.apiKey = config.openAiApi;
+            try {
+                import('../../config').then((importConfig: ConfigType) => {
+                    this.apiKey = importConfig.config.openAiApi;
+                });
+            } catch (e) {}
         }
     }
 
@@ -34,7 +42,7 @@ export class OpenApi {
         const result: ImageGenerationResponse[] = [];
         for (let i = 0; i < phrases.length; ++i) {
             const imagePrompt = phrases[i];
-            const imageResponse = this.imageRequest(imagePrompt + ' oil painting');
+            const imageResponse = this.mockImageRequest();//this.imageRequest(imagePrompt + ' oil painting');
 
             result.push({
                 text: imagePrompt,
