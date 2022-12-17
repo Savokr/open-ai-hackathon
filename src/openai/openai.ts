@@ -41,7 +41,7 @@ export class OpenApi {
         const result: ImageGenerationResponse[] = [];
         for (let i = 0; i < phrases.length; ++i) {
             const imagePrompt = phrases[i];
-            const imageResponse = this.mockImageRequest();//this.imageRequest(imagePrompt + ' oil painting');
+            const imageResponse = this.imageRequest(imagePrompt + ' oil painting');
 
             result.push({
                 text: imagePrompt,
