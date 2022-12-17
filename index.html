@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8"/><title>Infinite gallery</title><script defer="defer" src="bundle.js"></script></head><style>#input-field {
+        height: 80px;
+        width: 300px;
+        font-size: 70px;
+        color: rgba(182, 182, 182, 0.861);
+        background: rgb(254 255 239);
+        border-radius: 5px;
+        border: 0px;
+      }
+      #blocker {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        left: 0px;
+        top: 0px;
+        font-family: 'Courier New', Courier, monospace;
+			}
+      #instructions {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+				text-align: center;
+        color: rgb(255, 255, 255);
+				cursor: pointer;
+        font-size: larger;
+			}
+      #api-key {
+        text-align: center;
+        color: rgb(255, 255, 255);
+        position: absolute;
+        bottom: 3%;
+        left: 3%;
+        font-family: 'Courier New', Courier, monospace;
+      }
+      #api-input {
+        width: 200px;
+        color: rgba(182, 182, 182, 0.861);
+        background: rgb(254 255 239);
+        border-radius: 2px;
+        border: 0px;
+      }</style><body><div id="canvas-wrapper"></div><div id="blocker"><div id="instructions"><h1>Welcome to Infinite Gallery!</h1><p>What kind of art you want to see?</p><input id="input-field" value="trees"><br/>Click anywhere to start!<h2>Navigation</h2>Move: WASD keys<br/>Look around: mouse</div><div id="api-key">Enter your API key to test the app: <input id="api-input" value="your key" onfocus="this.value=''"> (source code available <a href="https://github.com/Savokr/open-ai-hackathon">here</a>)</div></div></body></html>
