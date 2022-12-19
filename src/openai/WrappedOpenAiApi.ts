@@ -1,31 +1,16 @@
-import { Configuration, OpenAIApi, ImagesResponseDataInner, ImagesResponse } from 'openai';
+import { ImagesResponseDataInner, ImagesResponse, CreateCompletionResponse, CreateCompletionResponseChoicesInner } from 'openai';
 
 import { image1 } from './testImages';
 
-//@ts-ignore
-import { config } from 'config';
-
-interface ImageGenerationResponse {
+export interface ImageGenerationResponse {
     text: string;
     imageData: Promise<ImagesResponseDataInner>
 }
 
-type ConfigType = {
-    config: {
-        openAiApi: string
-    }
-}
+export class WrappedOpenAiApi {
+    private apiKey = '';
 
-export class OpenApi {
-    private apiKey: string = '';
-
-    constructor(apiKey?: string) {
-        if (!apiKey) {
-            this.apiKey = config?.openAiApi ?? '';
-        }
-    }
-
-    setApiKey(key: string) {
+    setApiKey(key: string): void {
         this.apiKey = key;
     }
 
@@ -35,8 +20,8 @@ export class OpenApi {
     ): Promise<ImageGenerationResponse[]> {
         const textResponse = await this.textRequest(initialPrompt, n);
 
-        const phrases = textResponse.choices.map((ch: { text: string }) =>
-            ch.text.replace(/(\n)/g, '').replace(/\./g, ''));
+        const phrases = textResponse.choices.map((ch: CreateCompletionResponseChoicesInner) =>
+            ch.text!.replace(/(\n)/g, '').replace(/\./g, ''));
 
         const result: ImageGenerationResponse[] = [];
         for (let i = 0; i < phrases.length; ++i) {
@@ -55,7 +40,7 @@ export class OpenApi {
     }
 
 
-    async textRequest(prompt: string, variantsNumber: number = 1) {
+    async textRequest(prompt: string, variantsNumber = 1): Promise<CreateCompletionResponse> {
         const requestOptions = {
             method: 'POST',
             headers: {
@@ -73,7 +58,7 @@ export class OpenApi {
             .then(response => response.json())
     }
 
-    async imageRequest(prompt: string) {
+    async imageRequest(prompt: string): Promise<ImagesResponse> {
         const requestOptions = {
             method: 'POST',
             headers: {
@@ -91,7 +76,7 @@ export class OpenApi {
             .then(response => response.json())
     }
 
-    async mockImageRequest(promt: string = 'catOrTree') {
+    async mockImageRequest(): Promise<ImagesResponse> {
         const result: ImagesResponse = {
             data: [{
                 b64_json: image1,
@@ -106,8 +91,8 @@ export class OpenApi {
     }
 }
 
-async function asyncTimeout(time: number) {
-    return new Promise(function (resolve, reject) {
+async function asyncTimeout(time: number): Promise<void> {
+    return new Promise(function (resolve,) {
         setTimeout(resolve, time);
     });
 }
