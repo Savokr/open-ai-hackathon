@@ -16,6 +16,7 @@ export class SceneManager {
     private _renderer: THREE.WebGLRenderer;
     private _scene: THREE.Scene;
     private _cameraWrapper: CameraWrapper;
+    private _textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
 
     private readonly _initialPosition = new THREE.Vector3(0, 0, 0);
     private _corridorMap = new Map<string, CorridorInstance>;
@@ -47,7 +48,7 @@ export class SceneManager {
         styleFullScreen(domElement);
         this._renderer.setSize(window.innerWidth, window.innerHeight);
 
-        this._addCorridor(new CorridorInstance(this._scene, this._initialPosition));
+        this._addCorridor(new CorridorInstance(this._scene, this._initialPosition, this._textureLoader));
 
         const resizeListener = (): void => {
             this._cameraWrapper.camera.aspect = window.innerWidth / window.innerHeight;
@@ -98,12 +99,11 @@ export class SceneManager {
         } = this._getZLowerAndUpperCorridors();
 
         if (!zLowerCorridor) {
-            console.log('new corridor');
-            this._addCorridor(new CorridorInstance(this._scene, zLowerCorridorPosition));
+            this._addCorridor(new CorridorInstance(this._scene, zLowerCorridorPosition, this._textureLoader));
         }
 
         if (!zUpperCorridor) {
-            this._addCorridor(new CorridorInstance(this._scene, zUpperCorridorPosition));
+            this._addCorridor(new CorridorInstance(this._scene, zUpperCorridorPosition, this._textureLoader));
         }
     }
 

@@ -87,7 +87,7 @@ export class WrappedOpenAiApi {
         };
 
         for (let i=0;i<n;i++) {
-            result.choices[i] = {text: 'meow'}
+            result.choices[i] = {text: 'meow' + i }
         };
 
         await asyncTimeout(Math.random() * 1000);

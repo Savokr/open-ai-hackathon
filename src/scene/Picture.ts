@@ -3,61 +3,49 @@ import { ImagesResponseDataInner } from "openai";
 
 import { image1 } from '../openai/testImages';
 import { constants } from '../constants';
+import { Object3D } from 'three';
 
-export enum PictureSide {
-    Left = -1,
-    Right = 1
-}
-
-export class Picture {
-    private _textInfo: CanvasText;
+export class TitledPicture extends Object3D {
+    private _textObject: CanvasText;
     private _imgObject: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
 
     private _textureLoader: THREE.TextureLoader;
+    private _pictureMaterial: THREE.MeshStandardMaterial;
 
-    constructor(scene: THREE.Scene, position: THREE.Vector3, zPosition: number, side: PictureSide) {
-        this._textureLoader = new THREE.TextureLoader();
+    constructor(textureLoader: THREE.TextureLoader, pictureMaterial?: THREE.MeshStandardMaterial, textMaterial?: THREE.MeshBasicMaterial) {
+        super();
+        this._textureLoader = textureLoader;
+        this._pictureMaterial = pictureMaterial ?? new THREE.MeshStandardMaterial();
 
-        const material = new THREE.MeshStandardMaterial();
         const geometry = new THREE.PlaneGeometry(constants.corridorParams.pictures.size, constants.corridorParams.pictures.size);
-        this._imgObject = new THREE.Mesh(geometry, material);
-        
-        const xPosition = position.x + side * (constants.corridorParams.width / 2 - 0.1);
-        this._imgObject.position.set(
-            xPosition,
-            position.y,
-            zPosition,
-        );
-        this._imgObject.rotateY((side * -Math.PI) / 2);
+        this._imgObject = new THREE.Mesh(geometry, this._pictureMaterial);
 
-        scene.add(this._imgObject);
+        this.add(this._imgObject);
 
-        this._textInfo = new CanvasText(
-            scene,
-            position,
-            xPosition,
-            zPosition,
-            "Loading...",
-            side
-        );
+        this._textObject = new CanvasText('Loading...', textMaterial);
+        this._textObject.position.y = - (geometry.parameters.height / 2 + constants.corridorParams.texts.offset);
+
+        this.add(this._textObject);
     }
 
     async updatePicture(imageData: Promise<ImagesResponseDataInner>, text: string): Promise<void> {
-        this._textInfo.updateText(text);
+        this._textObject.updateText(text);
 
         const img = await imageData;
         const imgString = (img.b64_json ? ('data:image/png;base64,' + img.b64_json) : img.url) ?? '';
         const map = this._textureLoader.load(imgString);
+        this._imgObject.material.map?.dispose();
         this._imgObject.material.map = map;
         this._imgObject.material.needsUpdate = true;
     }
 }
 
-class CanvasText {
+class CanvasText extends THREE.Object3D {
     private _canvas: HTMLCanvasElement;
     private _object: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 
-    constructor(scene: THREE.Scene, position: THREE.Vector3, xPosition: number, zPosition: number, text: string, side: PictureSide) {
+    constructor(text: string, material?: THREE.MeshBasicMaterial) {
+        super();
         this._canvas = document.createElement('canvas');
         const textureSize = 1024;
         this._canvas.width = textureSize;
@@ -69,24 +57,18 @@ class CanvasText {
         context.fillText(text, 0, 50);
 
         const map = new THREE.CanvasTexture(this._canvas);
-        const material = new THREE.MeshBasicMaterial({
-            map: map,
+        const _material = material ?? new THREE.MeshBasicMaterial({
             transparent: true,
         });
+        _material.map = map;
         const geometry = new THREE.PlaneGeometry(constants.corridorParams.pictures.size, constants.corridorParams.pictures.size / 4);
-        this._object = new THREE.Mesh(geometry, material);
+        this._object = new THREE.Mesh(geometry, _material);
 
-        this._object.position.set(
-            xPosition,
-            position.y - (constants.corridorParams.pictures.size / 2 + constants.corridorParams.texts.offset),
-            zPosition,
-        );
-        this._object.rotateY((side * -Math.PI) / 2);
-
-        scene.add(this._object);
+        this.add(this._object);
     }
 
     updateText(newText: string): void {
+
         const canvasText1 = newText.slice(0, constants.corridorParams.texts.newLineLength);
         const canvasText2 = newText.slice(constants.corridorParams.texts.newLineLength, constants.corridorParams.texts.newLineLength*2);
         const canvasText3 = newText.slice(constants.corridorParams.texts.newLineLength*2);
@@ -97,6 +79,8 @@ class CanvasText {
         context.fillText(canvasText1, 0, 50);
         context.fillText(canvasText2, 0, 100);
         context.fillText(canvasText3, 0, 150);
+
+        this._object.material.map?.dispose();
 
         const textureMap = new THREE.CanvasTexture(this._canvas);
         this._object.material.map = textureMap;
