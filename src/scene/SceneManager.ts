@@ -8,7 +8,10 @@ import { constants } from '../constants';
 
 import { styleFullScreen } from "../helpers";
 
-export class WholeScene {
+//@ts-ignore
+import { config } from 'config';
+
+export class SceneManager {
     private _api: WrappedOpenAiApi;
     private _renderer: THREE.WebGLRenderer;
     private _scene: THREE.Scene;
@@ -22,6 +25,10 @@ export class WholeScene {
     constructor() {
         this._api = new WrappedOpenAiApi();
         this._cameraWrapper = new CameraWrapper();
+
+        if (config?.openAiApi) {
+            this._api.setApiKey(config.openAiApi);
+        }
 
         // Make scene
         this._scene = new THREE.Scene();
@@ -47,7 +54,6 @@ export class WholeScene {
             this._cameraWrapper.camera.updateProjectionMatrix();
             this._renderer.setSize(window.innerWidth, window.innerHeight);
         }
-        resizeListener.bind(this);
         window.addEventListener('resize', resizeListener);
 
         const inputFieldTopic = document.getElementById('input-field')! as HTMLInputElement;
@@ -65,12 +71,11 @@ export class WholeScene {
 
             this._cameraWrapper.lock();
         }
-        clickListener.bind(this);
-        inputFieldTopic.addEventListener('keydown', clickListener);
+        document.addEventListener('keydown', clickListener);
     }
 
     async render(): Promise<void> {
-        await this._preRenderActions();
+        this._preRenderActions();
 
         this._renderer.render(this._scene, this._cameraWrapper.camera);
     }
@@ -78,7 +83,7 @@ export class WholeScene {
     /* Private functions */
 
     private async _preRenderActions(): Promise<void> {
-        this._cameraWrapper.preRenderActions();
+        this._cameraWrapper.updateKeyboardMovement();
 
         this._generateCorridors();
         this._updateCorridors();
@@ -93,6 +98,7 @@ export class WholeScene {
         } = this._getZLowerAndUpperCorridors();
 
         if (!zLowerCorridor) {
+            console.log('new corridor');
             this._addCorridor(new CorridorInstance(this._scene, zLowerCorridorPosition));
         }
 

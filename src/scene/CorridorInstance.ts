@@ -36,7 +36,7 @@ export class CorridorInstance {
 
         const intervalBetweenLights = constants.corridorParams.length / (constants.corridorParams.lights.count + 1);
         for (let i = 1; i <= constants.corridorParams.lights.count; i++) {
-            const areaLight = this._createAreaLight(scene);
+            const areaLight = this.createAreaLight(scene);
             const areaLightHelper = new RectAreaLightHelper(areaLight);
             scene.add(areaLightHelper);
 
@@ -68,7 +68,7 @@ export class CorridorInstance {
         }
     }
 
-    private _createAreaLight(scene: THREE.Scene): THREE.RectAreaLight {
+    private createAreaLight(scene: THREE.Scene): THREE.RectAreaLight {
         const areaLight = new THREE.RectAreaLight(undefined, 40, 0.5, 0.5);
         scene.add(areaLight);
         return areaLight;

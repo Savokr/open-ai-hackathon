@@ -38,7 +38,6 @@ export class CameraWrapper {
                     break;
             }
         };
-        onKeyDown.bind(this);
         const onKeyUp = (event: KeyboardEvent): void => {
             switch (event.code) {
                 case 'KeyW':
@@ -55,7 +54,6 @@ export class CameraWrapper {
                     break;
             }
         };
-        onKeyUp.bind(this);
 
         document.addEventListener('keydown', onKeyDown, false);
         document.addEventListener('keyup', onKeyUp, false);
@@ -79,7 +77,6 @@ export class CameraWrapper {
             instructions.style.display = 'flex';
 
             inputFieldTopic.readOnly = false;
-            inputFieldApi.readOnly = false;
         });
     }
 
@@ -87,7 +84,7 @@ export class CameraWrapper {
         this._controls.lock();
     }
 
-    preRenderActions(): void {
+    updateKeyboardMovement(): void {
         if (this._controls.isLocked) {
             this._moveWithKeyboard();
         }

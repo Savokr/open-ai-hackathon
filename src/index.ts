@@ -1,9 +1,9 @@
-import { WholeScene } from "./scene/WholeScene";
+import { SceneManager } from "./scene/SceneManager";
 
-const wholeScene = new WholeScene();
+const sceneManager = new SceneManager();
 
 const render = (): void => {
-    wholeScene.render();
+    sceneManager.render();
     requestAnimationFrame(render);
 };
 

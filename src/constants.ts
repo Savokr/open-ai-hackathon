@@ -2,7 +2,7 @@ export const constants = {
     // Camera
     camera: {
         fov: 60,
-        movementSpeed: 0.2
+        movementSpeed: 0.1
     },
 
     // Corridor parameters

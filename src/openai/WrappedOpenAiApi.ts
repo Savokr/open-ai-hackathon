@@ -9,6 +9,7 @@ export interface ImageGenerationResponse {
 
 export class WrappedOpenAiApi {
     private apiKey = '';
+    private developmentMode = true;
 
     setApiKey(key: string): void {
         this.apiKey = key;
@@ -18,7 +19,7 @@ export class WrappedOpenAiApi {
         initialPrompt: string,
         n = 1,
     ): Promise<ImageGenerationResponse[]> {
-        const textResponse = await this.textRequest(initialPrompt, n);
+        const textResponse = await (this.developmentMode ? this.mockTextRequest(n) : this.textRequest(initialPrompt, n));
 
         const phrases = textResponse.choices.map((ch: CreateCompletionResponseChoicesInner) =>
             ch.text!.replace(/(\n)/g, '').replace(/\./g, ''));
@@ -26,7 +27,7 @@ export class WrappedOpenAiApi {
         const result: ImageGenerationResponse[] = [];
         for (let i = 0; i < phrases.length; ++i) {
             const imagePrompt = phrases[i];
-            const imageResponse = this.imageRequest(imagePrompt + ' oil painting');
+            const imageResponse = this.developmentMode ? this.mockImageRequest() : this.imageRequest(imagePrompt + ' oil painting');
 
             result.push({
                 text: imagePrompt,
@@ -74,6 +75,24 @@ export class WrappedOpenAiApi {
         };
         return fetch('https://api.openai.com/v1/images/generations', requestOptions)
             .then(response => response.json())
+    }
+
+    async mockTextRequest(n: number): Promise<CreateCompletionResponse> {
+        const result: CreateCompletionResponse = {
+            choices: new Array<CreateCompletionResponseChoicesInner>(),
+            id: '1',
+            object: 'meow',
+            model: 'savokr s brain',
+            created: -1
+        };
+
+        for (let i=0;i<n;i++) {
+            result.choices[i] = {text: 'meow'}
+        };
+
+        await asyncTimeout(Math.random() * 1000);
+
+        return result;
     }
 
     async mockImageRequest(): Promise<ImagesResponse> {

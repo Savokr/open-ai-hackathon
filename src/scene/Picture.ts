@@ -21,8 +21,7 @@ export class Picture {
         const material = new THREE.MeshStandardMaterial();
         const geometry = new THREE.PlaneGeometry(constants.corridorParams.pictures.size, constants.corridorParams.pictures.size);
         this._imgObject = new THREE.Mesh(geometry, material);
-        this._imgObject.castShadow = true;
-
+        
         const xPosition = position.x + side * (constants.corridorParams.width / 2 - 0.1);
         this._imgObject.position.set(
             xPosition,
@@ -38,7 +37,7 @@ export class Picture {
             position,
             xPosition,
             zPosition,
-            "",
+            "Loading...",
             side
         );
     }
