@@ -14,7 +14,11 @@ export enum PictureSide {
 export class CorridorInstance extends THREE.Object3D {
     public topic = "";
 
-    private _corridor: THREE.Mesh;
+    private _lowerPlane: THREE.Mesh;
+    private _upperPlane: THREE.Mesh;
+    private _leftPlane: THREE.Mesh;
+    private _rightPlane: THREE.Mesh;
+
     private _corridorBB: THREE.Box3;
     private _lights: THREE.Object3D[] = [];
     private _pictures: TitledPicture[] = [];
@@ -22,21 +26,44 @@ export class CorridorInstance extends THREE.Object3D {
     constructor(textureLoader: THREE.TextureLoader) {
         super();
 
-        const corridorGeometry = new THREE.BoxGeometry(
-            constants.corridorParams.width,
-            constants.corridorParams.height,
-            constants.corridorParams.length,
-        );
         const corridorMaterial = new THREE.MeshStandardMaterial({
             color: constants.corridorParams.color,
             side: THREE.DoubleSide,
         });
 
-        this._corridor = new THREE.Mesh(corridorGeometry, corridorMaterial);
-        this._corridor.receiveShadow = true;
-        this.add(this._corridor);
+        const lowerUpperPlaneGeometry = new THREE.PlaneGeometry(
+            constants.corridorParams.width,
+            constants.corridorParams.length
+        );
+        this._lowerPlane = new THREE.Mesh(lowerUpperPlaneGeometry, corridorMaterial);
+        this._upperPlane = new THREE.Mesh(lowerUpperPlaneGeometry, corridorMaterial);
+        this._lowerPlane.rotateX(Math.PI/2);
+        this._upperPlane.rotateX(Math.PI/2);
+        this._lowerPlane.position.y -= constants.corridorParams.height / 2;
+        this._upperPlane.position.y += constants.corridorParams.height / 2;
+        this._lowerPlane.receiveShadow = true;
+        this._upperPlane.receiveShadow = true;
+        this.add(this._lowerPlane);
+        this.add(this._upperPlane);
 
-        this._corridorBB = new THREE.Box3().setFromObject(this._corridor);
+        const leftRightPlaneGeometry = new THREE.PlaneGeometry(
+            constants.corridorParams.height,
+            constants.corridorParams.length
+        );
+        this._leftPlane = new THREE.Mesh(leftRightPlaneGeometry, corridorMaterial);
+        this._rightPlane = new THREE.Mesh(leftRightPlaneGeometry, corridorMaterial);
+        this._leftPlane.rotateX(Math.PI/2);
+        this._leftPlane.rotateY(Math.PI/2);
+        this._rightPlane.rotateX(Math.PI/2);
+        this._rightPlane.rotateY(Math.PI/2);
+        this._leftPlane.position.x -= constants.corridorParams.width / 2;
+        this._rightPlane.position.x += constants.corridorParams.width / 2;
+        this._leftPlane.receiveShadow = true;
+        this._rightPlane.receiveShadow = true;
+        this.add(this._leftPlane);
+        this.add(this._rightPlane);
+
+        this._corridorBB = new THREE.Box3().setFromObject(this);
 
         const intervalBetweenLights = constants.corridorParams.length / (constants.corridorParams.lights.count + 1);
         for (let i = 1; i <= constants.corridorParams.lights.count; i++) {
