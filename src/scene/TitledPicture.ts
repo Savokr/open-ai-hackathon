@@ -1,11 +1,9 @@
 import * as THREE from 'three';
 import { ImagesResponseDataInner } from "openai";
 
-import { image1 } from '../openai/testImages';
 import { constants } from '../constants';
-import { Object3D } from 'three';
 
-export class TitledPicture extends Object3D {
+export class TitledPicture extends THREE.Object3D {
     private _textObject: CanvasText;
     private _imgObject: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
 
