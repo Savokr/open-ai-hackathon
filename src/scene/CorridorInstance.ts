@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper';
 
 import { WrappedOpenAiApi } from "../openai/WrappedOpenAiApi";
-import { TitledPicture } from './Picture';
+import { TitledPicture } from './TitledPicture';
 
 import { constants } from "../constants";
 
@@ -11,48 +11,71 @@ export enum PictureSide {
     Right = 1
 }
 
-export class CorridorInstance {
+export class CorridorInstance extends THREE.Object3D {
     public topic = "";
-    public position: THREE.Vector3;
 
-    private _corridor: THREE.Mesh;
+    private _lowerPlane: THREE.Mesh;
+    private _upperPlane: THREE.Mesh;
+    private _leftPlane: THREE.Mesh;
+    private _rightPlane: THREE.Mesh;
+
     private _corridorBB: THREE.Box3;
     private _lights: THREE.Object3D[] = [];
     private _pictures: TitledPicture[] = [];
 
-    constructor(scene: THREE.Scene, position: THREE.Vector3, textureLoader: THREE.TextureLoader) {
-        this.position = position;
+    constructor(textureLoader: THREE.TextureLoader) {
+        super();
 
-        const corridorGeometry = new THREE.BoxGeometry(
-            constants.corridorParams.width,
-            constants.corridorParams.height,
-            constants.corridorParams.length,
-        );
         const corridorMaterial = new THREE.MeshStandardMaterial({
             color: constants.corridorParams.color,
             side: THREE.DoubleSide,
         });
 
-        this._corridor = new THREE.Mesh(corridorGeometry, corridorMaterial);
-        this._corridor.receiveShadow = true;
-        this._corridor.position.copy(position);
-        scene.add(this._corridor);
+        const lowerUpperPlaneGeometry = new THREE.PlaneGeometry(
+            constants.corridorParams.width,
+            constants.corridorParams.length
+        );
+        this._lowerPlane = new THREE.Mesh(lowerUpperPlaneGeometry, corridorMaterial);
+        this._upperPlane = new THREE.Mesh(lowerUpperPlaneGeometry, corridorMaterial);
+        this._lowerPlane.rotateX(Math.PI/2);
+        this._upperPlane.rotateX(Math.PI/2);
+        this._lowerPlane.position.y -= constants.corridorParams.height / 2;
+        this._upperPlane.position.y += constants.corridorParams.height / 2;
+        this._lowerPlane.receiveShadow = true;
+        this._upperPlane.receiveShadow = true;
+        this.add(this._lowerPlane);
+        this.add(this._upperPlane);
 
-        this._corridorBB = new THREE.Box3().setFromObject(this._corridor);
+        const leftRightPlaneGeometry = new THREE.PlaneGeometry(
+            constants.corridorParams.height,
+            constants.corridorParams.length
+        );
+        this._leftPlane = new THREE.Mesh(leftRightPlaneGeometry, corridorMaterial);
+        this._rightPlane = new THREE.Mesh(leftRightPlaneGeometry, corridorMaterial);
+        this._leftPlane.rotateX(Math.PI/2);
+        this._leftPlane.rotateY(Math.PI/2);
+        this._rightPlane.rotateX(Math.PI/2);
+        this._rightPlane.rotateY(Math.PI/2);
+        this._leftPlane.position.x -= constants.corridorParams.width / 2;
+        this._rightPlane.position.x += constants.corridorParams.width / 2;
+        this._leftPlane.receiveShadow = true;
+        this._rightPlane.receiveShadow = true;
+        this.add(this._leftPlane);
+        this.add(this._rightPlane);
+
+        this._corridorBB = new THREE.Box3().setFromObject(this);
 
         const intervalBetweenLights = constants.corridorParams.length / (constants.corridorParams.lights.count + 1);
         for (let i = 1; i <= constants.corridorParams.lights.count; i++) {
-            const areaLight = this.createAreaLight(scene);
+            const areaLight = new THREE.RectAreaLight(undefined, 40, 0.5, 0.5);
             const areaLightHelper = new RectAreaLightHelper(areaLight);
-            scene.add(areaLightHelper);
+            areaLight.add(areaLightHelper);
 
             const zPosition = i * intervalBetweenLights + this._corridorBB.min.z;
-            areaLight.position.set(
-                position.x,
-                position.y + constants.corridorParams.height / 2 - 0.01,
-                zPosition,
-            );
+            areaLight.position.y = constants.corridorParams.height / 2 - 0.01;
+            areaLight.position.z = zPosition;
             areaLight.rotateX(-Math.PI / 2);
+            this.add(areaLight);
             this._lights.push(areaLight);
 
             const picture1 = new TitledPicture(textureLoader);
@@ -61,16 +84,16 @@ export class CorridorInstance {
             this.applyPictureTransform(PictureSide.Left, picture1, zPosition);
             this.applyPictureTransform(PictureSide.Right, picture2, zPosition);
 
-            scene.add(picture1);
-            scene.add(picture2);
+            this.add(picture1);
+            this.add(picture2);
 
             this._pictures.push(picture1);
             this._pictures.push(picture2);
         }
     }
 
-    async updateTopic(api: WrappedOpenAiApi, newTopic: string): Promise<void> {
-        if (newTopic === this.topic) {
+    async updateTopic(api: WrappedOpenAiApi, newTopic: string, isForceUpdate: boolean): Promise<void> {
+        if (newTopic === this.topic && !isForceUpdate) {
             return;
         }
 
@@ -83,8 +106,8 @@ export class CorridorInstance {
         }
     }
 
-    private applyPictureTransform(side: PictureSide, object: THREE.Object3D, zPosition: number) {
-        
+    private applyPictureTransform(side: PictureSide, object: THREE.Object3D, zPosition: number): void {
+
         const xPosition = side * (constants.corridorParams.width / 2 - 0.1);
         object.position.set(
             xPosition,
@@ -92,11 +115,5 @@ export class CorridorInstance {
             zPosition,
         );
         object.rotateY((side * -Math.PI) / 2);
-    }
-
-    private createAreaLight(scene: THREE.Scene): THREE.RectAreaLight {
-        const areaLight = new THREE.RectAreaLight(undefined, 40, 0.5, 0.5);
-        scene.add(areaLight);
-        return areaLight;
     }
 }
