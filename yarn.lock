@@ -3354,10 +3354,10 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==
 
-three@^0.147.0:
-  version "0.147.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.147.0.tgz#1974af9e8e0c1efb3a8561334d57c0b6c29a7951"
-  integrity sha512-LPTOslYQXFkmvceQjFTNnVVli2LaVF6C99Pv34fJypp8NbQLbTlu3KinZ0zURghS5zEehK+VQyvWuPZ/Sm8fzw==
+three@^0.150.0:
+  version "0.150.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.150.0.tgz#38a324c3976e07799671d06d99f01b02a2fe65c6"
+  integrity sha512-12oqqBZom9fb5HtX3rD8qPVnamojuiN5Os7r0x8s3HQ+WHRwnEyzl2XU3aEKocsDkG++rkE9+HWzx77O59NXtw==
 
 thunky@^1.0.2:
   version "1.1.0"
